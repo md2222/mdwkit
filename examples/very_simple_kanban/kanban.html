@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="MSThemeCompatible" content="Yes">
+<title>Задачи</title>
+<link rel="shortcut icon" href="favicon.png" type="image/png">
+<!--
+-->
+
+<link href="js/jquery-ui-2.css" rel="stylesheet">
+<link rel="stylesheet" href="js/jquery.simplecolorpicker.css">
+
+<style type="text/css">
+html{ overflow: hidden; }
+body {
+    margin: 0;
+    font-family: Ubuntu, Arial;
+    font-size: 11pt;
+    height:100%;
+    background-color: #808080;
+    position: fixed !important;
+}
+#header {
+    width: 100%; 
+    margin: 0 auto;
+    background: #f0f0f0; 
+    padding: 7px;
+}
+#menu {
+    float: right; 
+    width: 40px;
+}
+
+#main {
+    padding:10px;
+}
+h1 { font-size:16pt; }
+h2 { font-size:13pt; }
+.column {
+    margin: 5px; 
+    padding: 0; 
+    height:840px; 
+    width: 200px; 
+    float:left; 
+    background-color: #f0f0f0; 
+}
+.column-header {
+    height:20px; 
+    width: auto; 
+    margin: 0 auto; 
+    background-color: #f0f0f0; 
+    padding:5px 10px; 
+    border-radius: inherit;
+    position: relative;
+}
+.column-name { 
+    font-size: 12pt; 
+    font-weight: bold; 
+    color: #444444; 
+}
+.column-task-count, #file { 
+    font-size: 10pt; 
+    font-weight: normal; 
+}
+.column-list {
+    height:100%; 
+    margin: 0; 
+    padding: 5px 35px 5px 0; 
+    background-color: #f0f0f0; 
+    overflow-y: scroll;
+    border-radius: inherit;
+}
+.add-button {
+    position: absolute;
+    right: 8px;
+    font-weight: bold; 
+    font-size: 19pt; 
+    line-height: 20px; 
+    cursor: pointer; 
+    margin: 0; 
+    color: #444444;
+}
+#saveButton, #loadButton {
+    font-size: 10pt; 
+    font-weight: normal;
+    cursor: pointer; 
+    color: #444444;
+    margin-right: 5px;
+}
+.placeHolder { background-color:#f0f0f0 !important; border:dashed 1px gray !important; }
+.list { 
+    margin: 0;
+    padding: 0 30px 0 5px; 
+    width: 100%; 
+    height:auto; 
+    list-style-type:none; 
+}
+.list li { 
+    float:left; 
+    padding: 6px; 
+    width: 100%; 
+    height: 57px; 
+    margin: 1px 3px 6px;
+    border-top: solid 1px #cccccc;
+    border-bottom: solid 1px #777777;
+    border-left: solid 1px #cccccc;
+    border-right: solid 1px #999999;
+    border-radius: 1px;
+    background-color: #ffffff;
+    position: relative;
+}
+.task-text { 
+    padding: 0; 
+    width: 100%; 
+    height: 45px; 
+    border: none; 
+    background-color: inherit;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+.task-info {
+    position: absolute;
+    bottom: 0px;
+    height: 12px;
+    font-size: 8pt; 
+    padding: 0 2px; 
+    color: #909090;
+}    
+.dragging {
+    box-shadow: 3px 3px 5px #444;
+}
+#taskText {
+    width: 98%;
+    padding: 5px;
+    font-family: Ubuntu, Arial;
+    font-size: 11pt;
+    background-color: #ffffff;
+    border: solid 1px #999999;
+}
+
+.ui-dialog .ui-dialog-buttonpane .ui-dialog-buttonset { text-align: center; float: none; } 
+.ui-dialog {
+    background: #f0f0f0;
+    box-shadow: 3px 3px 7px #444;
+}
+.ui-dialog .ui-dialog-content {
+    background: #f0f0f0;
+}
+.ui-dialog .ui-dialog-buttonpane {
+    background: #f0f0f0;
+}
+.ui-dialog .ui-dialog-buttonpane button {
+	width: 90px;
+    height: 30px;
+}
+.ui-datepicker-trigger {
+    height: 21px;
+    width: 21px;
+    padding: 0;
+    font-family: Arial; font-size: 9pt; font-weight: bold;
+}
+.ui-widget-overlay {
+	background: #000000;
+	opacity: .1;
+	filter: Alpha(Opacity=10);
+}
+
+</style>
+    
+</head>
+<body>
+
+
+<div id="header">
+	<select id="selFileName">
+	<option value="home.json" selected>Home</option>
+	<option value="work.json">Work</option>
+	</select>
+    <span id="file"></span>
+    <input type="file" id="fileName" name="fileName" style="visibility: hidden;" onchange="onFileSelect();"/>
+    <div id="menu">
+        <a id="saveButton" onclick="onSave();"><img src="js/images/save-03-22.png" title="Сохранить данные"></a>
+    </div>
+</div>
+
+<div id="main">	
+	
+<div class="board">	
+
+<div class="column">
+    <div class="column-header">
+        <span class="column-name">TO DO</span>
+        <span class="column-task-count">(0)</span>
+        <a class="add-button" onclick="taskDialog('col1');">+</a>
+    </div>	
+    <div class="column-list">
+        <ul id="col1" class="list">
+        </ul>
+    </div>	
+</div>	
+
+<div class="column">	
+    <div class="column-header">
+        <span class="column-name">DOING</span>
+        <span class="column-task-count">(0)</span>
+        <a class="add-button" onclick="taskDialog('col2');">+</a>
+    </div>	
+    <div class="column-list">
+        <ul id="col2" class="list">
+        </ul>
+    </div>	
+</div>	
+<!--
+<div class="column">	
+    <div class="column-header">
+        <span class="column-name">TEST</span>
+        <span class="column-task-count">(0)</span>
+    </div>	
+    <div class="column-list">
+        <ul id="col3" class="list">
+        </ul>
+    </div>	
+</div>	
+-->
+<div class="column">	
+    <div class="column-header">
+        <span class="column-name">DONE</span>
+        <span class="column-task-count">(0)</span>
+    </div>	
+    <div class="column-list">
+        <ul id="col4" class="list">
+        </ul>
+    </div>	
+</div>	
+
+</div>	
+
+
+<div style="clear:both;"></div>
+
+<div id="dlgTask" title="Task edit"><br>
+<textarea id="taskText" cols="100" rows="20" maxlength="2000"></textarea>
+<br>
+<select name="colorList">
+  <option value="#FFE0E3">red</option>
+  <option value="#FFF0D8">orange</option>
+  <option value="#fffcda">Yellow</option>
+  <option value="#E5FFE3">green</option>
+  <option value="#ccffff">green</option>
+  <option value="#DEE8FF">Blue</option>
+  <option value="#F0D8FF">Purple</option>
+  <option value="#ffffff">White</option>
+</select>
+</div>
+</div>
+
+
+<script type="text/javascript" src="js/jquery-1.10.2.js"></script> 
+
+<script type="text/javascript" src="js/jquery.dragsort-0.5.2.min.js"></script>
+<script src="js/jquery-ui-2.js"></script>
+<script src="js/base64.js"></script>
+<script src="js/jquery.simplecolorpicker.js"></script>
+
+<script type="text/javascript">
+
+var tasks = [];
+var colId = 'col1';
+var taskId = "";
+var isDataChanged = false;
+var currFileName = "0";
+var isTimer = false;
+var saveData = "";
+
+var loc = window.location;
+var docDir = loc.pathname.substring(0, loc.pathname.lastIndexOf('/') + 1);
+console.log("docDir=" + docDir);
+
+
+$(function() {
+
+$("#selFileName" ).val("0");
+
+$("#selFileName" ).change(function() {
+	var f = $(this).val();
+
+	if (f == "0") {
+		$(this).val(currFileName);
+		return;
+	}
+		
+    if (isDataChanged)
+        if (!confirm("Data has been changed. Do you want save data?")) {
+			$(this).val(currFileName);
+            return;
+		}
+		
+	if (f != "0") {
+		currFileName = f;
+        document.title = currFileName;
+		loadFile($(this).val());
+	}
+	return true;
+});
+
+$(".list").dragsort({ 
+    dragSelector: "li", 
+    dragSelectorExclude: "a", 
+    dragBetween: true, 
+    dragEnd: function() {
+        $(this).attr("col", $(this).parent().attr("id"));
+        //isDataChanged = true;
+		setDataChanged();
+        $("#saveButton").children('img').attr('src', 'js/images/save-03-1.png');
+        setCounts();
+    }, 
+    scrollContainer: ".column-list",
+    scrollSpeed: 10,
+    placeHolderTemplate: "<li class='placeHolder'></li>" 
+});
+
+
+$(".column").resize(function() {
+    $(this).children(".column-list").width($(this).width() - 5);
+    //$(this).children(".list").width($(this).width() - 10);
+});
+    
+
+$("#dlgTask").dialog({
+    dialogClass: "dialog",
+    autoOpen: false,
+    width: 760,
+    resizable: false,
+    buttons: {
+        "ОК": function() { 
+            editTask();
+            $(this).dialog("close"); 
+        }, 
+        "Delete": function() { 
+            if (taskId != "" && confirm("Really delete this task?")) {
+                $("#" + taskId).remove();
+                //isDataChanged = true;
+				setDataChanged();
+                $("#saveButton").children('img').attr('src', 'js/images/save-03-1.png');
+                setCounts();
+                $(this).dialog("close"); 
+            }
+        },
+        "Cancel": function() { 
+            $(this).dialog("close"); 
+        }
+    },
+    modal: true
+});
+
+$('select[name="colorList"]')
+    .simplecolorpicker('selectColor', '#ffffff');
+    /*.on('change', function() {
+        $("#taskText").css('background-color', $('select[name="colorList"]').val());
+    }); */
+
+
+function onResize() {
+    $(".column").height($(window).height() - $("#header").height() - 80);
+    $(".column").width(($(window).width() - 50)/3);
+};
+
+$(window).resize(function() {            
+    onResize();            
+});
+
+$(document).ready(function() {
+    onResize();
+
+    $("#selFileName" ).val("home.json");
+    $("#selFileName" ).trigger("change");
+});
+
+});
+
+
+
+
+function setDataChanged() {
+	isDataChanged = true;
+	if (!isTimer) {
+		isTimer = true;
+		setTimeout(onSave, 60000);
+	}	
+}
+
+
+
+function loadFile(fn)
+{
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "file://" + docDir + fn, true);  //++
+    //xhr.setRequestHeader("Cache-Control", "no-cache");  //--
+xhr.setRequestHeader('expires', 'Tue, 01 Jan 1980 1:00:00 GMT');
+    
+    xhr.onload = function () {
+        console.log("xhr.responseText=" + xhr.responseText);
+        if (xhr.responseText == "") tasks = []
+        else tasks = JSON.parse(xhr.responseText);
+        fillColumns();
+    };
+
+    xhr.send();    
+    
+	/*$.ajax({
+		url: "file://" + docDir + fn,
+		data: "",
+        dataType: "text",
+		cache: false,
+		async: false,
+        crossDomain: true,
+		error: function(xhr, textStatus, error) {
+			alert("Request error: " + xhr.status);
+		},
+		success: function(data) {
+			if (data == "") tasks = []
+		    else tasks = JSON.parse(data);
+		    fillColumns();
+		} 
+	}); */
+}
+
+
+function onClose()
+{
+    if (isDataChanged)
+        return "Data has been changed. Do you want save data?";
+    else
+        return;
+}
+
+window.onbeforeunload = onClose;
+
+
+function linkify(str) {
+    // http://, https://, ftp://
+    var urlPattern = /\b(?:https?|ftp):\/\/[a-z0-9-+&@#\/%?=~_|!:,.;]*[a-z0-9-+&@#\/%=~_|]/gim;
+    // www. sans http:// or https://
+    var pseudoUrlPattern = /(^|[^\/])(www\.[\S]+(\b|$))/gim;
+    // Email addresses
+    var emailAddressPattern = /[\w.]+@[a-zA-Z_-]+?(?:\.[a-zA-Z]{2,6})+/gim;
+
+    return str
+        .replace(urlPattern, '<a href="$&">$&</a>')
+        .replace(pseudoUrlPattern, '$1<a href="http://$2">$2</a>')
+        .replace(emailAddressPattern, '<a href="mailto:$&">$&</a>');
+}
+
+
+function addTask(idx, col, text, color, info) {
+    if (color == "" || color == "undefined") 
+        color = "#ffffff";
+        
+    var task = $('<li id="t' + idx + '" col="' + col + '" color="' + color + '"><div class="task-text">' + linkify(text) 
+        + '</div><div class="task-info">' + info + '</div></li>');
+    task.dblclick(function() {
+        taskId = $(this).attr("id");
+        $("#taskText").val($(this).find('div.task-text').text());
+        $('select[name="colorList"]').simplecolorpicker('selectColor', $(this).attr("color"));
+        $("#dlgTask").dialog("open");
+    });
+    task.draggable({
+         start: function( event, ui ) {
+              $(this).addClass('dragging'); 
+         },
+         stop: function( event, ui ) {
+              $(this).removeClass('dragging'); 
+         }
+    });
+    task.css('background-color', color);
+    $(".list[id='" + col + "']").append(task);
+}
+
+
+function setCounts () {
+    $(".column").each(function() {
+        $(this).find(".column-task-count").html("(" + $(this).find("li").length + ")");
+    });
+}
+
+
+function fillColumns() {
+    $(".list").each(function() {
+        $(this).find("li").each( function() {
+            $(this).remove();
+        });
+    });
+    
+    for (var i = 0; i < tasks.length; i++)
+        addTask(i, tasks[i].col, tasks[i].text, tasks[i].color, tasks[i].info);
+    
+    setCounts();
+    isDataChanged = false;
+    $("#saveButton").children('img').attr('src', 'js/images/save-03-22.png');
+}
+
+
+function taskDialog(col) {
+    colId = col;
+    taskId = "";
+    $("#taskText").val("");
+    $('select[name="colorList"]').simplecolorpicker('selectColor', "#ffffff");
+    $("#dlgTask").dialog("open");
+}
+
+
+function editTask() {
+    var taskText = $("#taskText").val();
+    if (taskText == "") return;
+    var info = $("#taskInfo").text();
+    
+    if (taskId == "") {
+        var d = new Date();
+        var day = d.getDate();
+        var month = d.getMonth() + 1;
+        if (month < 10) month = '0' + month;
+        var year = d.getFullYear()
+        var info = day + "." + month + "." + year;
+        
+        var idx = tasks.length;
+        var color = $('select[name="colorList"]').val();
+        var task = {};
+        task.id = "t" + idx;
+        task.col = colId;
+        task.text = taskText;
+        task.info = info;
+        task.color = color;
+        tasks.push(task);
+        
+        addTask(idx, colId, taskText, color, info);
+        setCounts();
+    }
+    else {
+        //alert("#" + taskId + "~" + taskText);
+        $("#" + taskId).contents('.task-text').html(linkify(taskText));
+        var c = $('select[name="colorList"]').val();
+        $("#" + taskId).attr("color", c)
+        $("#" + taskId).css('background-color', c);
+    }
+    
+    //isDataChanged = true;
+	setDataChanged();
+    $("#saveButton").children('img').attr('src', 'js/images/save-03-1.png');
+}
+//--------------------------------------------------------------------------------
+
+    
+function click(node) {
+	var event = document.createEvent("MouseEvents");
+	event.initMouseEvent("click", true, false, null, 0, 0, 0, 0, 0,
+						false, false, false, false, 0, null);
+	return node.dispatchEvent(event);
+}
+
+
+function stringifyTasks() {
+	isTimer = false;
+	if (!isDataChanged) return;
+	
+    tasks.splice(0, tasks.length);
+    
+    $(".list").each(function() {
+        $(this).find("li").each( function() {
+            var task = {};
+            task.id = $(this).attr("id");
+            task.col = $(this).attr("col");
+            task.text = $(this).find(".task-text").text();
+            task.info = $(this).find(".task-info").text();
+            task.color = $(this).attr("color");
+            tasks.push(task);
+        });
+    });
+    
+    return JSON.stringify(tasks);
+}
+
+
+function onSave() {
+	isTimer = false;
+	if (!isDataChanged) return;
+	
+    tasks.splice(0, tasks.length);
+    
+    $(".list").each(function() {
+        $(this).find("li").each( function() {
+            var task = {};
+            task.id = $(this).attr("id");
+            task.col = $(this).attr("col");
+            task.text = $(this).find(".task-text").text();
+            task.info = $(this).find(".task-info").text();
+            task.color = $(this).attr("color");
+            tasks.push(task);
+        });
+    });
+    
+    var file = docDir + currFileName;
+/*
+    var data = {};
+    data.script = "savedata";
+    data.file = file;
+    data.data = tasks;
+
+    var s = jsCoreRequest(JSON.stringify(data));
+    
+    var resp = JSON.parse(s);
+    if (!resp.errCode)  
+        alert("Error response bad format.\n" + resp);
+    else if (resp.errCode != "0")
+        alert(resp.errText);
+    else
+    {
+        isDataChanged = false;
+        $("#saveButton").children('img').attr('src', 'js/images/save-03-22.png');
+    }
+*/    
+    var data = JSON.stringify(tasks);
+    console.log("data=" + data);
+    
+    var res = jsCoreRequest("savedata?file=" + file, data);
+    console.log("resp=" + res);
+    
+    var p = res.indexOf("\r\n\r\n");
+    var header = JSON.parse(res.substr(0, p));
+
+    if (!p || !header.errCode)  
+        alert("Error response header bad format.\n" + header);
+    else if (header.errCode != "0")
+        alert(header.errText);
+    else
+    {
+        isDataChanged = false;
+        $("#saveButton").children('img').attr('src', 'js/images/save-03-22.png');
+    }
+}    
+
+
+function onLoad() {
+    if (isDataChanged && !confirm("The current data has been changed.\nWhen downloading, the changes will not be saved.\nContinue? ")) 
+        return;
+        
+    $("#fileName").click();
+}
+
+function onFileSelect() {
+    //alert("file://" + input.files[0]);
+}
+
+
+</script>
+
+</body>
+</html>

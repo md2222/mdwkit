@@ -1,0 +1,8 @@
+[Desktop Entry]
+Encoding=UTF-8
+Version=1.0
+Type=Application
+Terminal=false
+Exec=mdwkit /path-to-apps/very_simple_kanban/kanban.html
+Name=kanban
+Icon=/path-to-apps/very_simple_kanban/favicon.png
